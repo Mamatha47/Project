@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Snake And Ladder</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 20px;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: repeat(10, 80px);
+      grid-template-rows: repeat(10, 80px); 
+      width: 800px;
+      height: 800px;
+      margin: 20px auto;
+      background-image: url('https://th.bing.com/th/id/OIP.PEXndZxnH_r5UPDvM_Cp_wHaHa?cb=iwp1&rs=1&pid=ImgDetMain'); /* Update to your actual image path */
+      background-size: cover;
+    }
+
+    .container div {
+      border: 1px solid #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+      position: relative;
+    }
+
+    .player-token {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      position: absolute;
+      bottom: 5px;
+      left: 5px;
+    }
+
+    .controls {
+      margin: 15px 0;
+    }
+
+    select, button {
+      padding: 10px;
+      margin: 5px;
+      font-size: 16px;
+    }
+
+    #message {
+      font-size: 18px;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Snake & Ladder Game</h2>
+
+  <div class="controls">
+    <label for="players">Select Players:</label>
+    <select id="players">
+      <option value="1">1 Player</option>
+      <option value="2">2 Players</option>
+      <option value="3">3 Players</option>
+      <option value="4">4 Players</option>
+    </select>
+    <button onclick="startGame()">Start Game</button>
+    <button onclick="roll()">Roll Dice</button>
+  </div>
+
+  <div id="message"></div>
+  <div class="container" id="board"></div>
+
+  <script>
+    const board = document.getElementById('board');
+    const message = document.getElementById('message');
+
+    let players = [];
+    let currentPlayer = 0;
+    let positions = [];
+
+    const playerColors = ["red", "green", "blue", "orange"];
+
+    const ladders = {
+      4: 25,
+      21: 39,
+      26: 67,
+      43: 76,
+      59: 80,
+      71: 89
+    };
+
+    const snakes = {
+      30: 7,
+      47: 13,
+      56: 19,
+      73: 51,
+      82: 43,
+      92: 75,
+      98: 55
+    };
+
+    function startGame() {
+      const playerCount = parseInt(document.getElementById('players').value);
+      board.innerHTML = '';
+      players = [];
+      positions = [];
+      currentPlayer = 0;
+
+      // Generate 100 tiles in snaking pattern
+      for (let row = 9; row >= 0; row--) {
+        for (let col = 0; col < 10; col++) {
+          let number;
+          if (row % 2 === 0) {
+            number = row * 10 + col + 1; // left to right
+          } else {
+            number = row * 10 + (9 - col) + 1; // right to left
+          }
+
+          const tile = document.createElement('div');
+          tile.className = `tile tile${number}`;
+          tile.innerText = number;
+          board.appendChild(tile);
+        }
+      }
+
+      // Create and place tokens
+      for (let i = 0; i < playerCount; i++) {
+        const token = document.createElement('div');
+        token.className = 'player-token';
+        token.style.backgroundColor = playerColors[i];
+        token.dataset.player = i;
+        players.push(token);
+        positions.push(1);
+        document.querySelector(`.tile1`).appendChild(token);
+      }
+
+      message.innerText = `Player 1's turn`;
+    }
+
+    function roll() {
+      if (players.length === 0) {
+        alert("Please start the game first.");
+        return;
+      }
+
+      const dice = Math.floor(Math.random() * 6) + 1;
+      let pos = positions[currentPlayer];
+
+      if (pos + dice <= 100) {
+        pos += dice;
+      }
+
+      if (ladders[pos]) pos = ladders[pos];
+      else if (snakes[pos]) pos = snakes[pos];
+
+      positions[currentPlayer] = pos;
+
+      // Remove all tokens from tiles
+      document.querySelectorAll('.player-token').forEach(token => token.remove());
+
+      // Redraw each player's token
+      for (let i = 0; i < players.length; i++) {
+        document.querySelector(`.tile${positions[i]}`).appendChild(players[i]);
+      }
+
+      if (pos === 100) {
+        message.innerText = `🎉 Player ${currentPlayer + 1} wins! 🎉`;
+        players = [];
+        return;
+      }
+
+      currentPlayer = (currentPlayer + 1) % players.length;
+      message.innerText = `Player ${currentPlayer + 1}'s turn (Rolled: ${dice})`;
+    }
+  </script>
+</body>
+</html>
